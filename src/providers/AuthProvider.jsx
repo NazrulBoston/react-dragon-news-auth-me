@@ -88,16 +88,90 @@ atotuku karle console a user take dekha jabe
 9. amra console a dekhte parleo user take akhono context a set karte parini ar jonno onAuthStateChanged a namer akta jinis die set karte hobe ar jonno Manage Users 
 a jete hobe between Get stared and Password Authentication ar moddhe
 
-onAuthStateChanged 2 ta parameter nei akta hosse auth and arekta hosse call back function, ebong oi call back function ar moddhe akta parameter ase 
-user ba currentUser 
+onAuthStateChanged 2 ta parameter nei akta hosse auth and arekta hosse callback function, ebong oi callback function ar moddhe akta parameter ase 
+user ba currentUser. amra jehetu aita nije click karbo na like button ar moto , amra reload karar somoi aita dekhta chai tai amder useEffect use karte
+hobe
 
+useEffect(() => {
+    
+},[])
+
+tarpor ai useEffect ar vitore amder onAuthStateChanged k call karte hobe, tarpor 2 ta parameter nibe auth, currentUser and amra currentUser k console karte pari and
+setUser(currentUser) bosie dibo. 
+
+tarpor aita k abr aktu clean karte hoi, usually people nam dei const = unSubscribe and unSubscribe k pore function a return kare dea hoi
+
+
+useEffect(() => {
+    const usSubscribe = onAuthStateChanged(auth, currentUser => {
+        console.log('User in th auth state changed', currentUser)
+        setUser(currentUser)
+    } );
+    return () => {
+        usSubscribe();
+    }
+
+},[])
+
+10. sign out ar jonno firebase ar password authentication ar moddhe signout ar functionality ase
+ const logOut = () =>{
+        return signOut(auth);
+    }
+
+tarpor ai logout k authInfo te bosai dibo
+ const authInfo = {user, createUser, logOut} 
+  and Navbar.jsx file destructure kare felbo
+     const { user, logOut } = useContext(AuthContext);
+
+ arpor Navbar a login button take amra conditon ar moddhe nie jabo login karle logout button dekhabe 
+ and logout karle login button dekhabe
+
+ {
+         user ? <button className="btn">Sing Out</button>
+         :
+
+        <Link to="/login">
+               <button className="btn">Login</button>
+         </Link>
+   }
+arpor sign out button ar jonno akta eventhandler nite hobe and ar kono paramete thakbe na, tarpor oi function ar vitor 
+logOut k call kare dibo and .then() and .catch() dibo tarpor eventhandler function  k button ar moddhe onClick kare dite hobe.
+
+11. arpor abar login form ar moddhe setup karte hobe, login holo Registration ar khalato vai. firebase password authentication
+ar moddhe ase. signIn 2 ta paramete nei (email, password) and signInWithEmailAndPassword k call kara hobe tokhon se 3 ta 
+parameter nibe call kara somoi return kare dite hobe.
+
+  const signIn = (email, password) => {
+        return signInWithEmailAndPassword(auth, email, password)
+    }
+
+    tarpor sign in k amra context a rekhe dite pari jno onno jaiga theke use karte pari
+ const authInfo = { user, createUser, signIn, logOut }
+
+
+ tarpor Login.jsx file a destrructure karte hobe 
+ const { signIn } = useContext(AuthContext)
+
+ akhane(Login.jsx) file a jehetu amra form take set karsi sehetu amra eamil adn password k nie nite pari
+
+    const handleLogin = e => {
+        e.preventDefault(); 
+        console.log(e.currentTarget)
+        const form = new FormData(e.currentTarget);
+        const email = form.get(('email'))
+        const password = form.get(('password'))
+        console.log(email, password)
+    }
+console karle amra user ar information passi, jehetu amra information k passi sehetu amra signIn k call kare dite pari
+and parameter hisebe jabe (email, password) tarpor .then() and .catch()
 
  */
 
 
-import { createContext, useState } from "react";
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { createContext, useEffect, useState } from "react";
+import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import app from "../firebase/firebase.config";
+// import email from "surge/lib/middleware/email";
 
 
 export const AuthContext = createContext(null);
@@ -109,14 +183,34 @@ const auth = getAuth(app);
 
 const AuthProvider = ({ children }) => {
 
-    const[user, setUser] = useState(null)
+    const [user, setUser] = useState(null)
 
-    const createUser = (email, password) =>{
+    const createUser = (email, password) => {
         return createUserWithEmailAndPassword(auth, email, password)
     }
 
+    const signIn = (email, password) => {
+        return signInWithEmailAndPassword(auth, email, password)
+    }
 
-    const authInfo = {user, createUser}
+    const logOut = () => {
+        return signOut(auth);
+    }
+
+
+    useEffect(() => {
+        const usSubscribe = onAuthStateChanged(auth, currentUser => {
+            console.log('User in th auth state changed', currentUser)
+            setUser(currentUser)
+        });
+        return () => {
+            usSubscribe();
+        }
+
+    }, [])
+
+
+    const authInfo = { user, createUser, signIn, logOut }
 
 
     return (
